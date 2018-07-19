@@ -1,12 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 #define MAX_VALUE 10
 #define TRANSLATION 1
 #define ROTATION 2
 #define SCALING 3
 #define DIM 4
+
+
+clock_t t;
+
+void start(){
+	t = clock();
+}
+
+void stop(){
+	t = clock() -t;
+	double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+	printf("function took %f miliseconds to execute \n", time_taken*1000);
+}
 
 /* aloca memoria para as matrizes  */
 float **Alocar_matriz_real(int m, int n)
@@ -58,46 +72,48 @@ float **Liberar_matriz_real (int m, int n, float **v)
 	return (NULL); /* retorna um ponteiro nulo */
 }
 
-float **tran_mat(int m, int n, float **v)
+float **tran_mat(int tx, int ty, int tz, float **v)
 {
-	int i, j,tx,ty,tz;
+	int i, j;
+	//~ tx,ty,tz;
 
-	printf("\nInforme o valor de Tx : ");
-	scanf("%d", &tx);
-	printf("Informe o valor de Ty : ");
-	scanf("%d", &ty);
-	printf("Informe o valor de Tz : ");
-	scanf("%d", &tz);
-	for (i = 0 ; i < m; i++ )
-		for (j = 0; j < n-1; j++) {
+	//~ printf("\nInforme o valor de Tx : ");
+	//~ scanf("%d", &tx);
+	//~ printf("Informe o valor de Ty : ");
+	//~ scanf("%d", &ty);
+	//~ printf("Informe o valor de Tz : ");
+	//~ scanf("%d", &tz);
+	for (i = 0 ; i < DIM; i++ )
+		for (j = 0; j < DIM-1; j++) {
 		    if( i==j)
 			    v[i][j] = 1;
-			else
-			    v[i][j] = 0;
+			//~ else
+			    //~ v[i][j] = 0;
 			    
 		}
-	v[0][n-1] = tx;     v[1][n-1] = ty;     v[2][n-1] = tz; v[3][n-1] = 1;
+	v[0][DIM-1] = tx;     v[1][DIM-1] = ty;     v[2][DIM-1] = tz; v[3][DIM-1] = 1;
 	printf("\n");
 
 	return(v); 
 }
 
-float **sca_mat(int m, int n, float **v)
+float **sca_mat(int sx, int sy, int sz, float **v)
 {
-	int i, j,sx,sy,sz;
+	int i, j;
+	//~ ,sx,sy,sz;
 
-	printf("\nInforme o valor de Sx : ");
-	scanf("%d", &sx);
-	printf("Informe o valor de Sy : ");
-	scanf("%d", &sy);
-	printf("Informe o valor de Sz : ");
-	scanf("%d", &sz);
-	for (i = 0 ; i < m; i++ )
-		for (j = 0; j < n; j++) {
+	//~ printf("\nInforme o valor de Sx : ");
+	//~ scanf("%d", &sx);
+	//~ printf("Informe o valor de Sy : ");
+	//~ scanf("%d", &sy);
+	//~ printf("Informe o valor de Sz : ");
+	//~ scanf("%d", &sz);
+	for (i = 0 ; i < DIM; i++ )
+		for (j = 0; j < DIM; j++) {
 		    if( i==j)
 			    v[i][j] = 1;
-			else
-			    v[i][j] = 0;
+			//~ else
+			    //~ v[i][j] = 0;
 			    
 		}
 	v[0][0] = sx;     v[1][1] = sy;     v[2][2] = sz;
@@ -111,9 +127,8 @@ float **sca_mat(int m, int n, float **v)
  * */
 float **mult(int ma, int mb , int na, int nb, float **a, float **b, float **mr)
 {
-	clock_t t;
 	int i, j , v;
-	t = clock();
+	start();
 	for (i = 0 ; i < ma; i++ )
 		for (j = 0; j < nb; j++){
 		    mr[i][j] = 0;
@@ -121,9 +136,7 @@ float **mult(int ma, int mb , int na, int nb, float **a, float **b, float **mr)
 				mr[i][j] = mr[i][j] + a[i][v] * b[v][j];
 			}
 		}
-	t = clock() -t;
-	double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
-	printf("fun() took %f seconds to execute \n", time_taken);
+	stop();
 	return(mr);
 }
 
@@ -136,20 +149,20 @@ void imprime(int ma, int mb , int na, int nb , float **a, float **b, float **mr)
 	printf("\nMATRIX A:\n");
 	for (i = 0; i < ma; i++) {
 		for ( j = 0; j < na; j++)
-			printf("%2.f ", a[i][j]);
+			printf("%f ", a[i][j]);
 		printf("\n");
 	}
 	printf("MATRIX B:\n");
 	for (i = 0; i < mb; i++) {
 		for ( j = 0; j < nb; j++)
-			printf("%2.f ", b[i][j]);
+			printf("%f ", b[i][j]);
 	printf("\n");
 	}
 
 	printf("MATRIX C:\n");
 	for (i = 0; i < ma ; i++) {
 		for ( j = 0; j < nb ; j++)
-			printf("%3.f", mr[i][j]);
+			printf("%f", mr[i][j]);
 		printf("\n");
 	}
 }
@@ -171,6 +184,62 @@ float **rand_mat(int m, int n, float **v)
 	return(v); 
 }
 
+float **rotx_mat(double angle, float **v){
+	int i, j;
+	for (i = 0 ; i < DIM; i++ )
+		for (j = 0; j < DIM; j++) {
+			if (i == j){
+				if ( i == 0 || i == DIM-1)
+					v[i][j] = 1.0;
+				else
+					v[i][j] = cos(angle);
+			}
+			if ( i + j == DIM -1)
+				if (i == 1 || j == 1) //só funciona pra DIM 4
+					v[i][j] = (i-j)*sin(angle);
+		}
+	
+		return(v);
+}
+
+float **roty_mat(double angle, float **v){
+	int i, j;
+	//só funciona pra DIM 4
+	for (i = 0 ; i < DIM; i++ )
+		for (j = 0; j < DIM; j++) {
+			if (i == j){
+				if ( i % 2 == 0)
+					v[i][j] = cos(angle);
+				else
+					v[i][j] = 1.0;
+			}
+			else
+				if ( i + j == 2)
+					v[i][j] = ((j-i)/2)*sin(angle);
+		}
+	
+		return(v);
+}
+
+float **rotz_mat(double angle, float **v){
+		int i, j;
+	//só funciona pra DIM 4
+	for (i = 0 ; i < DIM; i++ )
+		for (j = 0; j < DIM; j++) {
+			if (i == j){
+				if ( i < 2)
+					v[i][j] = cos(angle);
+				else
+					v[i][j] = 1.0;
+			}
+			else
+				if ( i + j == 1)
+					v[i][j] = (i-j)*sin(angle);
+		}
+	
+		return(v);
+}
+
 /*
  * Essa é a funcao principal
  */
@@ -180,18 +249,18 @@ int main(int argc, char **argv)
 	float **B;  /* matriz a ser alocada */
 	float **MR;  /* matriz a ser alocada */
 	int la =DIM, lb=DIM, ca=DIM, cb=0;   /* numero de linhas e colunas da matriz */
-    int op;
+    int op, x, y,z;
 	
 	if (argc>1){
 		if((cb=atoi(*(++argv))))
-			printf("Numero de Colunas C: %d\n",cb);
+			printf("Numero de pontos para serem gerados randomicamente: %d\n",cb);
 		else{
 			printf("Informação Invalida!\n");
 			argc = 1;		
 		}
 	}
 	if (argc ==1){
-		printf("Informe o Numero de Colunas C : ");
+		printf("Informe o numero de pontos para serem gerados randomicamente: ");
 		scanf("%d", &cb);
 	}
 
@@ -205,13 +274,25 @@ int main(int argc, char **argv)
     
     switch(op){
         case TRANSLATION:
-                        A = tran_mat(la,ca,A);
+						printf("\nInforme o valor de Tx : ");
+						scanf("%d", &x);
+						printf("Informe o valor de Ty : ");
+						scanf("%d", &y);
+						printf("Informe o valor de Tz : ");
+						scanf("%d", &z);
+                        A = tran_mat(x,y,z,A);
                         break;
         case ROTATION:
-                       // A = rot_mat(la,ca,A);
+                        A = rotz_mat(1.5707,A); //teste com 1.5707 rad
                         break;
         case SCALING:
-                        A = sca_mat(la,ca,A);
+						printf("\nInforme o valor de Sx : ");
+						scanf("%d", &x);
+						printf("Informe o valor de Sy : ");
+						scanf("%d", &y);
+						printf("Informe o valor de Sz : ");
+						scanf("%d", &z);
+                        A = sca_mat(x,y,z,A);
                         break;
     }
 
