@@ -37,11 +37,9 @@
  * Device code.
  */
 
-#ifndef _MATRIXMUL_KERNEL_H_
-#define _MATRIXMUL_KERNEL_H_
 
 #include <stdio.h>
-#include "matrixMul.h"
+#include "pointTrans.h"
 
 #define CHECK_BANK_CONFLICTS 0
 #if CHECK_BANK_CONFLICTS
@@ -126,5 +124,3 @@ matrixMul( float* C, float* A, float* B, int wA, int wB)
     int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
     C[c + wB * ty + tx] = Csub;
 }
-
-#endif // #ifndef _MATRIXMUL_KERNEL_H_

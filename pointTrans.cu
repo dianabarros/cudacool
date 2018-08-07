@@ -8,10 +8,13 @@
 // Matrix dimensions
 #define WA 4 // Matrix A width
 #define HA 4 // Matrix A height
+#define SIZE_A WA*HA
 #define HB WA  // Matrix B height
 //#define WC WB  // Matrix C width 
 #define HC HA // Matrix C height
-
+#define MAX_VALUE 10
+#define TRANSLATION 1
+#define SCALING 2
 // includes, project
 #include <cutil.h>
 
@@ -20,12 +23,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 // declaration, forward
 void runTest(int argc, char** argv);
-void randomInit(float*, int);
+float *create_matB( int, int, float* ); 
 void printDiff(float*, float*, int, int);
-
-extern "C"
-void computeGold(float*, const float*, const float*, unsigned int, unsigned int, unsigned int);
-
+float *tran_mat(float, float, float, float*);
+float *sca_mat(float, float, float, float *);
+void intiate_matA(float *);
 ////////////////////////////////////////////////////////////////////////////////
 // Program main
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,23 +45,22 @@ void runTest(int argc, char** argv){
     CUT_DEVICE_INIT();
 
     // set seed for rand()
-    srand(2006);
-	
-	int WB = 10000;
-	int WC = WB;											// WB = WC = 10000 PRA FUNCIONAR
+    srand(2018);
+	int WB=0;
+	printf("Informe o numero de pontos para serem gerados randomicamente: ");
+	scanf("%d", &WB);
+	int WC = WB;											
     // allocate host memory for matrices A and B
-    unsigned int size_A = WA * HA;
-    unsigned int mem_size_A = sizeof(float) * size_A;
-    float* h_A = (float*) malloc(mem_size_A);				//CALLOC ?
+    unsigned int mem_size_A = sizeof(float) * SIZE_A;
+    float* h_A = (float*) calloc(mem_size_A);				
     unsigned int size_B = WB * HB;								
     unsigned int mem_size_B = sizeof(float) * size_B;
     float* h_B = (float*) malloc(mem_size_B);
 
-    // initialize host memory								// USAR NOSSAS FUNÇÕES DE DE PREENCHIMENTO
-    randomInit(h_A, size_A);		
-    randomInit(h_B, size_B);
-
-    // allocate device memory
+    // initialize host memory
+    intiate_matA(h_A);		
+    h_B = create_matB(WB,HB,h_B);
+	// allocate device memory
     float* d_A;
     CUDA_SAFE_CALL(cudaMalloc((void**) &d_A, mem_size_A));
     float* d_B;
@@ -113,3 +114,86 @@ void runTest(int argc, char** argv){
     CUDA_SAFE_CALL(cudaFree(d_B));
     CUDA_SAFE_CALL(cudaFree(d_C));
 }
+
+// Allocates a matrix with random float entries.
+float *create_matB( int width, int height, float *pMat) {
+
+	//float *pMat = (float *)malloc( width * height * sizeof( float ) );
+	srand(time(NULL));
+
+	int i;
+	for (i = 0 ; i < width*height; i++ ){
+		if (i < width*(height-1))
+			v[i] = (float)(rand() % MAX_VALUE);
+		else
+			v[i] = 1.0;
+	}	
+	return pMat;
+}
+
+float *tran_mat(float tx, float ty, float tz, float *v){
+	int i;
+	
+	for (i = 0 ; i < SIZE_A; i++ ){
+		if(!i%5)
+			v[i] = 1;			    
+	}
+	v[WA-1] = tx;     v[2*WA-1] = ty;     v[3*WA-1] = tz;
+
+	return(v); 
+}
+
+float *sca_mat(float sx, float sy, float sz, float *v){
+	v[0] = sx;
+	v[2*WA+1] = sy;
+	v[3*WA+2] = sz;
+	v[SIZE_A-1] = 1;
+
+	return(v); 
+}
+
+void intiate_matA(float *pMat){
+	int op;
+	float x, y,z;
+	
+	printf("\nInforme o Tipo de Operação: \n1- Translation\n2- Scaling\n\nNumero da operação: ");
+    scanf("%d", &op);
+    
+    switch(op){
+        case TRANSLATION:
+						printf("\nInforme o valor de Tx : ");
+						scanf("%f", &x);
+						printf("Informe o valor de Ty : ");
+						scanf("%f", &y);
+						printf("Informe o valor de Tz : ");
+						scanf("%f", &z);
+                        tran_mat(x,y,z,pMat);
+                        break;
+        case SCALING:
+						printf("\nInforme o valor de Sx : ");
+						scanf("%f", &x);
+						printf("Informe o valor de Sy : ");
+						scanf("%f", &y);
+						printf("Informe o valor de Sz : ");
+						scanf("%f", &z);
+                        sca_mat(x,y,z,pMat);
+                        break;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
