@@ -36,7 +36,7 @@ void printDiff(float*, float*, int, int);
 float *tran_mat(float, float, float, float*);
 float *sca_mat(float, float, float, float *);
 void intiate_matA(float *);
-
+void print_results(float *,float *,float *,int,int,int);
 
 /*-------------------------------------------------------------------/
 			Matrix multiplication on the device: C = A * B
@@ -165,11 +165,12 @@ void runTest(int argc, char** argv){
 	float* h_C = (float*) malloc(mem_size_C);
 	
 	// create and start timer
+	clock_t t = clock();
 	//alguma coisa aqui??
 
 	// setup execution parameters
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-	dim3 grid(WC / threads.x);
+	dim3 grid((WC-1)/ threads.x +1,(HC-1)/ threads.y+1);
 
 	// execute the kernel
 	matrixMul<<< grid, threads >>>(d_C, d_A, d_B, WA, WB);
@@ -178,8 +179,13 @@ void runTest(int argc, char** argv){
 	cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
 
 	// stop and destroy timer
+	t = clock() -t;
+	double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+	printf("function took %f miliseconds to execute \n", time_taken*1000);
 	// outra coisa aqui??
-
+  //print_results(h_A,h_B,h_C,SIZE_A,size_B,size_C);
+  
+  
 	// clean up memory
 	free(h_A);
 	free(h_B);
@@ -210,7 +216,7 @@ float *tran_mat(float tx, float ty, float tz, float *v){
 	int i;
 	
 	for (i = 0 ; i < SIZE_A; i++ ){
-		if(!i%5)
+		if(!(i%5))
 			v[i] = 1;				
 	}
 	v[WA-1] = tx;	 v[2*WA-1] = ty;	 v[3*WA-1] = tz;
@@ -220,8 +226,8 @@ float *tran_mat(float tx, float ty, float tz, float *v){
 
 float *sca_mat(float sx, float sy, float sz, float *v){
 	v[0] = sx;
-	v[2*WA+1] = sy;
-	v[3*WA+2] = sz;
+	v[WA+1] = sy;
+	v[2*WA+2] = sz;
 	v[SIZE_A-1] = 1;
 
 	return(v); 
@@ -256,3 +262,28 @@ void intiate_matA(float *pMat){
 	}
 }
 
+void print_results(float *A,float *B,float *C,int size_A,int size_B,int size_C){
+	int i;
+	/* Impressao das Matrizes */
+	printf("\nMATRIX A:\n");
+	for (i = 0; i < size_A; i++) {
+		if(!(i%(size_A/4)))
+			printf("\n");
+		printf("%5.2f ", A[i]);
+	}
+		
+	printf("\n\nMATRIX B:\n");
+		for (i = 0; i < size_B; i++) {
+		if(!(i%(size_B/4)))
+			printf("\n");
+		printf("%5.2f ", B[i]);
+	}
+
+	printf("\n\nMATRIX C:\n");
+		for (i = 0; i < size_C; i++) {
+		if(!(i%(size_C/4)))
+			printf("\n");
+		printf("%5.2f ", C[i]);
+	}
+	printf("\n");
+}
