@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <cutil.h>
+//#include <cutil.h>
 #include "matrixMul_kernel.cu"	// includes, kernels
 
 #define BLOCK_SIZE 16
